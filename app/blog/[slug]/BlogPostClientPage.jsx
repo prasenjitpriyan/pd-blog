@@ -21,17 +21,31 @@ function CommentForm({ postId, parentCommentId = null, onCommentSubmitted }) {
     setIsLoading(true);
     setError(null);
 
+    const dataToSend = {
+      action: 'createComment',
+      payload: { _id: postId, name, email, comment, parentCommentId },
+    };
+
+    // --- CHANGE 1: ADD A CONSOLE.LOG FOR DEBUGGING ---
+    // This lets you see the exact data being sent in your browser's console.
+    console.log('Submitting comment with payload:', dataToSend);
+
     try {
       const response = await fetch('/api/handle-interaction', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'createComment',
-          payload: { _id: postId, name, email, comment, parentCommentId },
-        }),
+        body: JSON.stringify(dataToSend),
       });
 
-      if (!response.ok) throw new Error('Failed to submit comment.');
+      // --- CHANGE 2: IMPROVED ERROR HANDLING ---
+      // If the response is not OK, we read the JSON body to get the specific error message.
+      if (!response.ok) {
+        const errorData = await response.json();
+        // Use the specific error from the backend, or a generic one if unavailable.
+        throw new Error(
+          errorData.error || errorData.message || 'Failed to submit comment.'
+        );
+      }
 
       onCommentSubmitted({
         name,
@@ -99,6 +113,7 @@ function CommentForm({ postId, parentCommentId = null, onCommentSubmitted }) {
   );
 }
 
+// The rest of the file remains the same.
 export default function BlogPostClientPage({ post }) {
   const [likes, setLikes] = useState(post.likes || 0);
   const [alreadyLiked, setAlreadyLiked] = useState(false);

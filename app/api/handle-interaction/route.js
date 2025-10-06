@@ -39,6 +39,7 @@ export async function POST(request) {
         { status: 200 }
       );
     } catch (err) {
+      console.error('🔥 Sanity Error creating comment:', err.message);
       return NextResponse.json(
         { message: 'Error submitting comment', err },
         { status: 500 }
