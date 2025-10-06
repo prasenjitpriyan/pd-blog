@@ -1,4 +1,3 @@
-// sanity/schemaTypes/author.js
 import { defineField, defineType } from 'sanity';
 
 export default defineType({
@@ -26,14 +25,31 @@ export default defineType({
       name: 'image',
       title: 'Image',
       type: 'image',
-      options: {
-        hotspot: true, // Enables better image cropping
-      },
+      options: { hotspot: true },
+      fields: [
+        {
+          name: 'alt',
+          title: 'Alt Text',
+          type: 'string',
+          description: 'Alternative text for screen readers',
+        },
+      ],
     }),
     defineField({
       name: 'bio',
       title: 'Bio',
-      type: 'text',
+      type: 'array',
+      of: [{ type: 'block' }],
+    }),
+    defineField({
+      name: 'social',
+      title: 'Social Links',
+      type: 'object',
+      fields: [
+        { name: 'twitter', title: 'Twitter', type: 'url' },
+        { name: 'linkedin', title: 'LinkedIn', type: 'url' },
+        { name: 'website', title: 'Website', type: 'url' },
+      ],
     }),
   ],
   preview: {

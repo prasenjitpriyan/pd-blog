@@ -20,6 +20,8 @@ export default defineType({
         decorators: [
           { title: 'Strong', value: 'strong' },
           { title: 'Emphasis', value: 'em' },
+          { title: 'Code', value: 'code' },
+          { title: 'Underline', value: 'underline' },
         ],
         annotations: [
           {
@@ -40,6 +42,14 @@ export default defineType({
     defineArrayMember({
       type: 'image',
       options: { hotspot: true },
+      fields: [
+        {
+          name: 'caption',
+          type: 'string',
+          title: 'Caption',
+          options: { isHighlighted: true },
+        },
+      ],
     }),
   ],
 });

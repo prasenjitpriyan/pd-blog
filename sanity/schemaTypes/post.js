@@ -1,4 +1,3 @@
-// sanity/schemaTypes/post.js
 import { defineField, defineType } from 'sanity';
 
 export default defineType({
@@ -26,48 +25,63 @@ export default defineType({
       name: 'author',
       title: 'Author',
       type: 'reference',
-      to: { type: 'author' }, // This links to the Author schema
+      to: { type: 'author' },
       validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'mainImage',
       title: 'Main image',
       type: 'image',
-      options: {
-        hotspot: true,
-      },
+      options: { hotspot: true },
+    }),
+    defineField({
+      name: 'excerpt',
+      title: 'Excerpt',
+      type: 'text',
+      description: 'Short summary of the post',
+      validation: (Rule) => Rule.max(200),
     }),
     defineField({
       name: 'publishedAt',
       title: 'Published at',
       type: 'datetime',
-      initialValue: () => new Date().toISOString(), // Automatically set to current time
+      initialValue: () => new Date().toISOString(),
       validation: (Rule) => Rule.required(),
     }),
     defineField({
       name: 'body',
       title: 'Body',
-      type: 'blockContent', // This is Sanity's rich text editor
+      type: 'blockContent',
     }),
     defineField({
       name: 'likes',
       title: 'Likes',
       type: 'number',
-      // This field will be updated by your frontend, so we make it read-only in the studio
       readOnly: true,
       initialValue: 0,
     }),
+    defineField({
+      name: 'comments',
+      title: 'Comments',
+      type: 'array',
+      of: [{ type: 'reference', to: { type: 'comment' } }],
+    }),
   ],
-
   preview: {
     select: {
       title: 'title',
       author: 'author.name',
+      publishedAt: 'publishedAt',
       media: 'mainImage',
     },
     prepare(selection) {
-      const { author } = selection;
-      return { ...selection, subtitle: author && `by ${author}` };
+      const { author, publishedAt } = selection;
+      return {
+        ...selection,
+        subtitle: `${author ? `by ${author}` : ''} ${
+          publishedAt ? `on ${new Date(publishedAt).toLocaleDateString()}` : ''
+        }`,
+      };
     },
   },
 });

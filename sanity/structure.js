@@ -16,6 +16,11 @@ export const structure = (S) =>
             ])
         ),
 
+      S.listItem()
+        .title('📂 Categories')
+        .id('categories')
+        .child(S.documentTypeList('category').title('All Categories')),
+
       S.divider(),
 
       S.listItem()
@@ -33,19 +38,34 @@ export const structure = (S) =>
                     .title('Pending Comments')
                     .apiVersion(apiVersion)
                     .filter('_type == "comment" && approved == false')
+                    .order('_createdAt desc')
                 ),
-              S.listItem().title('✅ Approved').schemaType('comment').child(
-                S.documentList()
-                  .title('Approved Comments')
-                  // 3. And add the apiVersion here
-                  .apiVersion(apiVersion)
-                  .filter('_type == "comment" && approved == true')
-              ),
+              S.listItem()
+                .title('✅ Approved')
+                .schemaType('comment')
+                .child(
+                  S.documentList()
+                    .title('Approved Comments')
+                    .apiVersion(apiVersion)
+                    .filter('_type == "comment" && approved == true')
+                    .order('_createdAt desc')
+                ),
             ])
         ),
 
       S.divider(),
+
+      S.listItem()
+        .title('⚙️ Settings')
+        .id('settings')
+        .child(
+          S.document().schemaType('siteSettings').documentId('siteSettings')
+        ),
+
       ...S.documentTypeListItems().filter(
-        (listItem) => !['post', 'author', 'comment'].includes(listItem.getId())
+        (listItem) =>
+          !['post', 'author', 'comment', 'category', 'siteSettings'].includes(
+            listItem.getId()
+          )
       ),
     ]);
