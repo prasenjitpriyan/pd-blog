@@ -1,14 +1,9 @@
-// sanity/structure.js
+import { apiVersion } from './env';
 
-/**
- * This is the configuration for the desk tool.
- * It is used to create the structure of the studio's content.
- */
 export const structure = (S) =>
   S.list()
     .title('PD-Blog Content')
     .items([
-      // A group for all blog-related content
       S.listItem()
         .title('📝 Blog Content')
         .id('blog-content')
@@ -21,9 +16,8 @@ export const structure = (S) =>
             ])
         ),
 
-      S.divider(), // A visual separator
+      S.divider(),
 
-      // A group for managing user comments, split into pending and approved
       S.listItem()
         .title('💬 User Comments')
         .id('comments')
@@ -31,30 +25,26 @@ export const structure = (S) =>
           S.list()
             .title('Comments')
             .items([
-              // A list of comments that need your approval
               S.listItem()
                 .title('👀 Pending Approval')
                 .schemaType('comment')
                 .child(
                   S.documentList()
                     .title('Pending Comments')
+                    .apiVersion(apiVersion)
                     .filter('_type == "comment" && approved == false')
                 ),
-              // A list of all approved comments
-              S.listItem()
-                .title('✅ Approved')
-                .schemaType('comment')
-                .child(
-                  S.documentList()
-                    .title('Approved Comments')
-                    .filter('_type == "comment" && approved == true')
-                ),
+              S.listItem().title('✅ Approved').schemaType('comment').child(
+                S.documentList()
+                  .title('Approved Comments')
+                  // 3. And add the apiVersion here
+                  .apiVersion(apiVersion)
+                  .filter('_type == "comment" && approved == true')
+              ),
             ])
         ),
 
       S.divider(),
-
-      // The rest of our document types, filtered out so we don't have duplicates
       ...S.documentTypeListItems().filter(
         (listItem) => !['post', 'author', 'comment'].includes(listItem.getId())
       ),

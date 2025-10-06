@@ -1,7 +1,9 @@
+// app/blog/[slug]/page.jsx
+
 import { client } from '@/sanity/lib/client';
+import { notFound } from 'next/navigation';
 import BlogPostClientPage from './BlogPostClientPage';
 
-// This function enables Static Site Generation for your blog posts
 export async function generateStaticParams() {
   const slugs = await client.fetch(
     `*[_type == "post" && defined(slug.current)][].slug.current`
@@ -11,11 +13,12 @@ export async function generateStaticParams() {
   }));
 }
 
-// The main server component for the page
+// This remains an async function
 export default async function PostPage({ params }) {
-  const { slug } = params;
+  // --- THIS IS THE DEFINITIVE FIX FOR NEXT.JS 15 ---
+  // Await the params Promise to get the actual object, then destructure slug.
+  const { slug } = await params;
 
-  // GROQ query to get the post and its approved comments/replies
   const query = `*[_type == "post" && slug.current == $slug][0]{
     _id,
     title,
@@ -33,12 +36,12 @@ export default async function PostPage({ params }) {
     }
   }`;
 
+  // Now you can use the `slug` variable as before.
   const post = await client.fetch(query, { slug });
 
   if (!post) {
-    return <div>Post not found</div>; // Or a proper 404 page
+    notFound();
   }
 
-  // Pass the server-fetched data to the interactive client component
   return <BlogPostClientPage post={post} />;
 }

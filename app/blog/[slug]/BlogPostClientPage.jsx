@@ -4,7 +4,6 @@ import { urlFor } from '@/sanity/lib/image';
 import { PortableText } from '@portabletext/react';
 import { useEffect, useState } from 'react';
 
-// A reusable form component for both new comments and replies
 function CommentForm({ postId, parentCommentId = null, onCommentSubmitted }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -28,26 +27,18 @@ function CommentForm({ postId, parentCommentId = null, onCommentSubmitted }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'createComment',
-          payload: {
-            _id: postId,
-            name,
-            email,
-            comment,
-            parentCommentId,
-          },
+          payload: { _id: postId, name, email, comment, parentCommentId },
         }),
       });
 
       if (!response.ok) throw new Error('Failed to submit comment.');
 
-      // Optimistically add comment to the UI
       onCommentSubmitted({
         name,
         comment,
         _createdAt: new Date().toISOString(),
       });
 
-      // Clear form
       setName('');
       setEmail('');
       setComment('');
@@ -59,43 +50,61 @@ function CommentForm({ postId, parentCommentId = null, onCommentSubmitted }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="comment-form">
-      <h4>{parentCommentId ? 'Write a Reply' : 'Leave a Comment'}</h4>
-      {error && <p className="error-message">{error}</p>}
+    <form
+      onSubmit={handleSubmit}
+      className="flex flex-col gap-3 mb-8 border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+      <h4 className="text-lg font-semibold text-gray-800">
+        {parentCommentId ? 'Write a Reply' : 'Leave a Comment'}
+      </h4>
+
+      {error && <p className="text-red-500 text-sm">{error}</p>}
+
       <input
         type="text"
         placeholder="Your Name*"
         value={name}
         onChange={(e) => setName(e.target.value)}
         required
+        className="p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
+
       <input
         type="email"
         placeholder="Your Email (not published)"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
+        className="p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
+
       <textarea
         placeholder="Your Comment*"
         value={comment}
         onChange={(e) => setComment(e.target.value)}
-        rows="4"
-        required></textarea>
-      <button type="submit" disabled={isLoading}>
+        rows={4}
+        required
+        className="p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+
+      <button
+        type="submit"
+        disabled={isLoading}
+        className={`self-start px-4 py-2 rounded-md text-white font-medium transition-colors ${
+          isLoading
+            ? 'bg-gray-400 cursor-not-allowed'
+            : 'bg-blue-600 hover:bg-blue-700'
+        }`}>
         {isLoading ? 'Submitting...' : 'Submit'}
       </button>
     </form>
   );
 }
 
-// Main component to render the entire page
 export default function BlogPostClientPage({ post }) {
   const [likes, setLikes] = useState(post.likes || 0);
   const [alreadyLiked, setAlreadyLiked] = useState(false);
   const [comments, setComments] = useState(post.comments || []);
-  const [replyTo, setReplyTo] = useState(null); // State to track which comment to reply to
+  const [replyTo, setReplyTo] = useState(null);
 
-  // Check localStorage to see if the user has already liked this post
   useEffect(() => {
     if (window.localStorage.getItem(`liked-${post._id}`)) {
       setAlreadyLiked(true);
@@ -105,12 +114,10 @@ export default function BlogPostClientPage({ post }) {
   const handleLike = async () => {
     if (alreadyLiked) return;
 
-    // Optimistic UI update
-    setLikes((prevLikes) => prevLikes + 1);
+    setLikes((prev) => prev + 1);
     setAlreadyLiked(true);
     window.localStorage.setItem(`liked-${post._id}`, 'true');
 
-    // Call the API route
     try {
       await fetch('/api/handle-interaction', {
         method: 'POST',
@@ -120,19 +127,16 @@ export default function BlogPostClientPage({ post }) {
           payload: { _id: post._id },
         }),
       });
-    } catch (error) {
-      console.error('Failed to update like count:', error);
-      // Optional: Revert optimistic update on failure
-      setLikes((prevLikes) => prevLikes - 1);
+    } catch (err) {
+      console.error('Failed to update like count:', err);
+      setLikes((prev) => prev - 1);
       setAlreadyLiked(false);
       window.localStorage.removeItem(`liked-${post._id}`);
     }
   };
 
   const handleNewComment = (newCommentData) => {
-    // Add a temporary flag to show it's pending
-    const optimisticComment = { ...newCommentData, isPending: true };
-    setComments((prevComments) => [...prevComments, optimisticComment]);
+    setComments((prev) => [...prev, { ...newCommentData, isPending: true }]);
   };
 
   const handleNewReply = (newReplyData, parentId) => {
@@ -141,192 +145,122 @@ export default function BlogPostClientPage({ post }) {
       isPending: true,
       parentComment: { _ref: parentId },
     };
-    setComments((prevComments) => [...prevComments, optimisticReply]);
-    setReplyTo(null); // Close the reply form after submitting
+    setComments((prev) => [...prev, optimisticReply]);
+    setReplyTo(null);
   };
 
   const topLevelComments = comments.filter((c) => !c.parentComment);
 
   return (
-    <article className="blog-post">
-      <h1>{post.title}</h1>
-      <p className="author-info">By {post.authorName}</p>
+    <article className="max-w-3xl mx-auto px-4 py-10 font-sans text-gray-800">
+      <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-gray-900">
+        {post.title}
+      </h1>
+      <p className="text-gray-500 mb-6">By {post.authorName}</p>
 
       {post.mainImage && (
         <img
           src={urlFor(post.mainImage).width(800).url()}
           alt={post.title}
-          className="main-image"
+          className="w-full h-auto rounded-lg mb-8"
         />
       )}
 
-      <div className="post-body">
+      <div className="prose prose-blue max-w-none mb-8">
         <PortableText value={post.body} />
       </div>
 
-      <div className="interactions-section">
+      <div className="mb-8">
         <button
           onClick={handleLike}
           disabled={alreadyLiked}
-          className="like-button">
+          className={`px-4 py-2 text-sm font-medium border rounded-md transition-all ${
+            alreadyLiked
+              ? 'bg-gray-200 text-gray-600 cursor-not-allowed'
+              : 'bg-white border-gray-300 hover:bg-blue-600 hover:text-white'
+          }`}>
           ❤️ {likes} Like{likes !== 1 && 's'}{' '}
           {alreadyLiked && '(You liked this!)'}
         </button>
       </div>
 
-      <hr />
+      <hr className="my-8 border-gray-200" />
 
-      <section className="comments-section">
-        <h2>Comments ({topLevelComments.length})</h2>
+      <section>
+        <h2 className="text-2xl font-semibold mb-6">
+          Comments ({topLevelComments.length})
+        </h2>
+
         <CommentForm postId={post._id} onCommentSubmitted={handleNewComment} />
 
-        <div className="comment-list">
+        <div className="space-y-4">
           {topLevelComments.map((comment) => (
             <div
               key={comment._id || comment._createdAt}
-              className={`comment ${comment.isPending ? 'pending' : ''}`}>
-              <p>
-                <strong>{comment.name}</strong>{' '}
-                {comment.isPending && <em>(Pending approval)</em>}
+              className={`border border-gray-200 rounded-lg p-4 ${
+                comment.isPending ? 'opacity-70 border-dashed' : ''
+              }`}>
+              <p className="font-semibold">
+                {comment.name}{' '}
+                {comment.isPending && (
+                  <span className="text-sm text-gray-400">
+                    (Pending approval)
+                  </span>
+                )}
               </p>
-              <p>{comment.comment}</p>
+              <p className="mt-1 text-gray-700">{comment.comment}</p>
+
               <button
-                className="reply-button"
                 onClick={() =>
                   setReplyTo(
                     replyTo === (comment._id || comment._createdAt)
                       ? null
                       : comment._id || comment._createdAt
                   )
-                }>
+                }
+                className="text-blue-600 text-sm mt-2 hover:underline">
                 {replyTo === (comment._id || comment._createdAt)
                   ? 'Cancel Reply'
                   : 'Reply'}
               </button>
 
-              {/* Nested Replies */}
-              <div className="replies">
+              <div className="ml-5 mt-4 pl-4 border-l-2 border-gray-100 space-y-3">
                 {comments
-                  .filter((reply) => reply.parentComment?._ref === comment._id)
+                  .filter((r) => r.parentComment?._ref === comment._id)
                   .map((reply) => (
                     <div
                       key={reply._id || reply._createdAt}
-                      className={`comment reply ${reply.isPending ? 'pending' : ''}`}>
-                      <p>
-                        <strong>{reply.name}</strong>{' '}
-                        {reply.isPending && <em>(Pending approval)</em>}
+                      className={`rounded-md p-3 bg-gray-50 ${
+                        reply.isPending ? 'opacity-70' : ''
+                      }`}>
+                      <p className="font-semibold">
+                        {reply.name}{' '}
+                        {reply.isPending && (
+                          <span className="text-sm text-gray-400">
+                            (Pending approval)
+                          </span>
+                        )}
                       </p>
-                      <p>{reply.comment}</p>
+                      <p className="mt-1 text-gray-700">{reply.comment}</p>
                     </div>
                   ))}
-              </div>
 
-              {replyTo === (comment._id || comment._createdAt) && (
-                <div className="reply-form-container">
-                  <CommentForm
-                    postId={post._id}
-                    parentCommentId={comment._id}
-                    onCommentSubmitted={(newReply) =>
-                      handleNewReply(newReply, comment._id)
-                    }
-                  />
-                </div>
-              )}
+                {replyTo === (comment._id || comment._createdAt) && (
+                  <div className="mt-3">
+                    <CommentForm
+                      postId={post._id}
+                      parentCommentId={comment._id}
+                      onCommentSubmitted={(newReply) =>
+                        handleNewReply(newReply, comment._id)
+                      }
+                    />
+                  </div>
+                )}
+              </div>
             </div>
           ))}
         </div>
       </section>
-
-      {/* Basic Styling */}
-      <style jsx>{`
-        .blog-post {
-          max-width: 800px;
-          margin: 2rem auto;
-          font-family: sans-serif;
-        }
-        .main-image {
-          width: 100%;
-          height: auto;
-          border-radius: 8px;
-        }
-        .like-button {
-          font-size: 1rem;
-          padding: 10px 15px;
-          cursor: pointer;
-          border-radius: 5px;
-          border: 1px solid #ccc;
-        }
-        .like-button:disabled {
-          cursor: not-allowed;
-          background: #eee;
-        }
-        .comments-section {
-          margin-top: 2rem;
-        }
-        .comment-form {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-          margin-bottom: 2rem;
-          border: 1px solid #eee;
-          padding: 1rem;
-          border-radius: 5px;
-        }
-        .comment-form input,
-        .comment-form textarea {
-          padding: 10px;
-          font-size: 1rem;
-          border: 1px solid #ddd;
-          border-radius: 4px;
-        }
-        .comment-form button {
-          align-self: flex-start;
-          padding: 10px 20px;
-          background-color: #0070f3;
-          color: white;
-          border: none;
-          border-radius: 5px;
-          cursor: pointer;
-        }
-        .comment-form button:disabled {
-          background-color: #ccc;
-        }
-        .comment-list .comment {
-          border: 1px solid #eee;
-          padding: 1rem;
-          margin-bottom: 1rem;
-          border-radius: 5px;
-        }
-        .comment.pending {
-          opacity: 0.7;
-          border-style: dashed;
-        }
-        .reply-button {
-          font-size: 0.8rem;
-          background: none;
-          border: none;
-          color: #0070f3;
-          cursor: pointer;
-          padding: 0;
-          margin-top: 5px;
-        }
-        .replies {
-          margin-left: 2rem;
-          border-left: 2px solid #eee;
-          padding-left: 1rem;
-          margin-top: 1rem;
-        }
-        .reply {
-          background-color: #f9f9f9;
-        }
-        .reply-form-container {
-          margin-left: 2rem;
-          margin-top: 1rem;
-        }
-        .error-message {
-          color: red;
-        }
-      `}</style>
     </article>
   );
 }

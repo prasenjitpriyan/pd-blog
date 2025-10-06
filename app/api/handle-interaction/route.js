@@ -1,14 +1,12 @@
-// app/api/handle-interaction/route.js
 import { createClient } from '@sanity/client';
 import { NextResponse } from 'next/server';
 
-// Create a dedicated client for writing data
 const writeClient = createClient({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
   dataset: process.env.NEXT_PUBLIC_SANITY_DATASET,
   apiVersion: '2024-01-01',
-  useCdn: false, // Must be false for writes
-  token: process.env.SANITY_API_WRITE_TOKEN, // Use the write token
+  useCdn: false,
+  token: process.env.SANITY_API_WRITE_TOKEN,
 });
 
 export async function POST(request) {
@@ -28,7 +26,6 @@ export async function POST(request) {
         comment,
       };
 
-      // If it's a reply, add the parent reference
       if (parentCommentId) {
         newComment.parentComment = {
           _type: 'reference',
@@ -52,7 +49,6 @@ export async function POST(request) {
   if (action === 'likePost') {
     const { _id } = payload;
     try {
-      // Use a patch to increment the 'likes' field
       const result = await writeClient
         .patch(_id)
         .setIfMissing({ likes: 0 })

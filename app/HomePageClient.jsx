@@ -6,89 +6,45 @@ import PostDate from './components/PostDate';
 
 export default function HomePageClient({ posts }) {
   return (
-    <div>
-      <h1 className="home-title">Latest Articles</h1>
+    <div className="max-w-6xl mx-auto px-4 py-10">
+      <h1 className="text-4xl font-bold text-center mb-10 text-gray-900">
+        Latest Articles
+      </h1>
 
-      {!posts ||
-        (posts.length === 0 && (
-          <p>No posts have been published yet. Check back soon!</p>
-        ))}
+      {!posts || posts.length === 0 ? (
+        <p className="text-center text-gray-500">
+          No posts have been published yet. Check back soon!
+        </p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          {posts.map((post) => (
+            <Link
+              key={post._id}
+              href={`/blog/${post.slug}`}
+              className="block border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-transform duration-200 hover:-translate-y-1 bg-white">
+              {post.mainImage ? (
+                <img
+                  className="w-full h-52 object-cover"
+                  src={urlFor(post.mainImage).width(500).height(300).url()}
+                  alt={post.title}
+                />
+              ) : (
+                <div className="w-full h-52 bg-gray-100"></div>
+              )}
 
-      <div className="post-grid">
-        {posts.map((post) => (
-          <Link
-            key={post._id}
-            href={`/blog/${post.slug}`}
-            className="post-card">
-            {post.mainImage ? (
-              <img
-                className="post-card-image"
-                src={urlFor(post.mainImage).width(500).height(300).url()}
-                alt={post.title}
-              />
-            ) : (
-              <div className="post-card-image-placeholder"></div>
-            )}
-            <div className="post-card-content">
-              <h3 className="post-card-title">{post.title}</h3>
-              <p className="post-card-meta">
-                By {post.authorName} on {/* USE THE NEW COMPONENT HERE */}
-                <PostDate dateString={post.publishedAt} />
-              </p>
-            </div>
-          </Link>
-        ))}
-      </div>
-
-      {/* styled-jsx is now safe to use here because of 'use client' */}
-      <style jsx>{`
-        .home-title {
-          text-align: center;
-          font-size: 2.5rem;
-          margin-bottom: 2rem;
-        }
-        .post-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-          gap: 2rem;
-        }
-        .post-card {
-          display: block;
-          border: 1px solid #eaeaea;
-          border-radius: 8px;
-          overflow: hidden;
-          transition:
-            transform 0.2s ease-in-out,
-            box-shadow 0.2s ease-in-out;
-        }
-        .post-card:hover {
-          transform: translateY(-5px);
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        }
-        .post-card-image {
-          width: 100%;
-          height: 200px;
-          object-fit: cover;
-        }
-        .post-card-image-placeholder {
-          width: 100%;
-          height: 200px;
-          background-color: #f0f0f0;
-        }
-        .post-card-content {
-          padding: 1rem;
-        }
-        .post-card-title {
-          margin: 0 0 0.5rem;
-          font-size: 1.25rem;
-          color: var(--text-color);
-        }
-        .post-card-meta {
-          margin: 0;
-          font-size: 0.9rem;
-          color: #666;
-        }
-      `}</style>
+              <div className="p-5">
+                <h3 className="text-xl font-semibold text-gray-800 mb-2 hover:text-blue-600 transition-colors">
+                  {post.title}
+                </h3>
+                <p className="text-sm text-gray-500">
+                  By {post.authorName} on{' '}
+                  <PostDate dateString={post.publishedAt} />
+                </p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

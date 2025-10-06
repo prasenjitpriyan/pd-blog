@@ -1,42 +1,47 @@
 import { Inter } from 'next/font/google';
 import Link from 'next/link';
-import './globals.css'; // Make sure you have this file for global styles
+import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
 
-// Metadata for SEO
 export const metadata = {
   title: {
     default: 'PD-Blog - My Personal Development Journey',
-    template: '%s | PD-Blog', // Used by child pages
+    template: '%s | PD-Blog',
   },
   description: 'A blog about personal development, coding, and life lessons.',
 };
 
-// Reusable Header Component
 function Header() {
   return (
-    <header className="main-header">
-      <div className="container">
-        <Link href="/" className="logo">
+    <header className="bg-white shadow-sm sticky top-0 z-50">
+      <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+        <Link
+          href="/"
+          className="text-2xl font-bold text-blue-600 hover:text-blue-700 transition-colors">
           PD-Blog
         </Link>
-        <nav>
-          {/* You can add more links here later */}
-          <Link href="/">Home</Link>
-          {/* Example: <Link href="/about">About</Link> */}
+
+        <nav className="space-x-6 text-gray-700">
+          <Link
+            href="/"
+            className="hover:text-blue-600 font-medium transition-colors">
+            Home
+          </Link>
         </nav>
       </div>
     </header>
   );
 }
 
-// Reusable Footer Component
 function Footer() {
   return (
-    <footer className="main-footer">
-      <div className="container">
-        <p>&copy; {new Date().getFullYear()} PD-Blog. All rights reserved.</p>
+    <footer className="bg-gray-100 mt-12 border-t border-gray-200">
+      <div className="max-w-6xl mx-auto px-4 py-6 text-center text-sm text-gray-600">
+        <p>
+          &copy; {new Date().getFullYear()}{' '}
+          <span className="font-semibold">PD-Blog</span>. All rights reserved.
+        </p>
       </div>
     </footer>
   );
@@ -45,10 +50,11 @@ function Footer() {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body
+        className={`${inter.className} bg-gray-50 text-gray-800 min-h-screen flex flex-col`}>
         <Header />
-        <main className="main-content">
-          <div className="container">{children}</div>
+        <main className="flex-grow">
+          <div className="max-w-6xl mx-auto px-4 py-10">{children}</div>
         </main>
         <Footer />
       </body>
