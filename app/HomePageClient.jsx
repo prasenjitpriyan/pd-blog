@@ -6,12 +6,12 @@ import PostDate from './components/PostDate';
 
 export default function HomePageClient({ posts }) {
   return (
-    <div className="max-w-6xl mx-auto px-4 py-10">
+    <main className="max-w-6xl mx-auto px-4 py-10">
       <h1 className="text-4xl font-bold text-center mb-10 text-gray-900">
         Latest Articles
       </h1>
 
-      {!posts || posts.length === 0 ? (
+      {!posts?.length ? (
         <p className="text-center text-gray-500">
           No posts have been published yet. Check back soon!
         </p>
@@ -21,23 +21,24 @@ export default function HomePageClient({ posts }) {
             <Link
               key={post._id}
               href={`/blog/${post.slug}`}
-              className="block border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-transform duration-200 hover:-translate-y-1 bg-white">
+              className="group block border border-gray-200 rounded-lg overflow-hidden shadow-sm bg-white transition-transform duration-200 hover:-translate-y-1 hover:shadow-lg">
               {post.mainImage ? (
                 <img
-                  className="w-full h-52 object-cover"
+                  className="w-full h-52 object-cover transition-transform duration-300 group-hover:scale-105"
                   src={urlFor(post.mainImage).width(500).height(300).url()}
                   alt={post.title}
+                  loading="lazy"
                 />
               ) : (
                 <div className="w-full h-52 bg-gray-100"></div>
               )}
 
               <div className="p-5">
-                <h3 className="text-xl font-semibold text-gray-800 mb-2 hover:text-blue-600 transition-colors">
+                <h3 className="text-xl font-semibold text-gray-800 mb-2 group-hover:text-blue-600 transition-colors">
                   {post.title}
                 </h3>
                 <p className="text-sm text-gray-500">
-                  By {post.authorName} on{' '}
+                  By <span className="font-medium">{post.authorName}</span> on{' '}
                   <PostDate dateString={post.publishedAt} />
                 </p>
               </div>
@@ -45,6 +46,6 @@ export default function HomePageClient({ posts }) {
           ))}
         </div>
       )}
-    </div>
+    </main>
   );
 }

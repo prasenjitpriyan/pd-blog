@@ -22,7 +22,7 @@ function Header() {
           PD-Blog
         </Link>
 
-        <nav className="space-x-6 text-gray-700">
+        <nav aria-label="Main Navigation" className="space-x-6 text-gray-700">
           <Link
             href="/"
             className="hover:text-blue-600 font-medium transition-colors">
@@ -42,6 +42,7 @@ function Footer() {
           &copy; {new Date().getFullYear()}{' '}
           <span className="font-semibold">PD-Blog</span>. All rights reserved.
         </p>
+        <p className="mt-1">Built with ❤️ using Next.js and Sanity.io</p>
       </div>
     </footer>
   );
@@ -49,7 +50,7 @@ function Footer() {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" className="scroll-smooth">
       <body
         className={`${inter.className} bg-gray-50 text-gray-800 min-h-screen flex flex-col`}>
         <Header />
