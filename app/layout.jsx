@@ -50,7 +50,7 @@ function Footer() {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className="scroll-smooth">
+    <html lang="en" data-scroll-behavior="smooth">
       <body
         className={`${inter.className} bg-gray-50 text-gray-800 min-h-screen flex flex-col`}>
         <Header />

@@ -9,39 +9,32 @@ function CommentForm({ postId, parentCommentId = null, onCommentSubmitted }) {
   const [email, setEmail] = useState('');
   const [comment, setComment] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name || !comment || !postId) {
+    if (!name || !comment) {
       setError('Name and comment are required.');
       return;
     }
 
     setIsLoading(true);
-    setError(null);
+    setError('');
 
-    const dataToSend = {
+    const payload = {
       action: 'createComment',
-      payload: { _id: postId, name, email, comment, parentCommentId },
+      payload: { postId, name, email, comment, parentCommentId },
     };
 
-    // --- CHANGE 1: ADD A CONSOLE.LOG FOR DEBUGGING ---
-    // This lets you see the exact data being sent in your browser's console.
-    console.log('Submitting comment with payload:', dataToSend);
-
     try {
-      const response = await fetch('/api/handle-interaction', {
+      const res = await fetch('/api/handle-interaction', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dataToSend),
+        body: JSON.stringify(payload),
       });
 
-      // --- CHANGE 2: IMPROVED ERROR HANDLING ---
-      // If the response is not OK, we read the JSON body to get the specific error message.
-      if (!response.ok) {
-        const errorData = await response.json();
-        // Use the specific error from the backend, or a generic one if unavailable.
+      if (!res.ok) {
+        const errorData = await res.json();
         throw new Error(
           errorData.error || errorData.message || 'Failed to submit comment.'
         );
@@ -66,7 +59,7 @@ function CommentForm({ postId, parentCommentId = null, onCommentSubmitted }) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col gap-3 mb-8 border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+      className="flex flex-col gap-3 p-4 border rounded-lg bg-white shadow-sm">
       <h4 className="text-lg font-semibold text-gray-800">
         {parentCommentId ? 'Write a Reply' : 'Leave a Comment'}
       </h4>
@@ -78,8 +71,8 @@ function CommentForm({ postId, parentCommentId = null, onCommentSubmitted }) {
         placeholder="Your Name*"
         value={name}
         onChange={(e) => setName(e.target.value)}
+        className="p-2 border rounded focus:ring-2 focus:ring-blue-500"
         required
-        className="p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
 
       <input
@@ -87,7 +80,7 @@ function CommentForm({ postId, parentCommentId = null, onCommentSubmitted }) {
         placeholder="Your Email (not published)"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-        className="p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="p-2 border rounded focus:ring-2 focus:ring-blue-500"
       />
 
       <textarea
@@ -95,8 +88,8 @@ function CommentForm({ postId, parentCommentId = null, onCommentSubmitted }) {
         value={comment}
         onChange={(e) => setComment(e.target.value)}
         rows={4}
+        className="p-2 border rounded focus:ring-2 focus:ring-blue-500"
         required
-        className="p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
 
       <button
@@ -113,7 +106,6 @@ function CommentForm({ postId, parentCommentId = null, onCommentSubmitted }) {
   );
 }
 
-// The rest of the file remains the same.
 export default function BlogPostClientPage({ post }) {
   const [likes, setLikes] = useState(post.likes || 0);
   const [alreadyLiked, setAlreadyLiked] = useState(false);
@@ -139,7 +131,7 @@ export default function BlogPostClientPage({ post }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'likePost',
-          payload: { _id: post._id },
+          payload: { postId: post._id },
         }),
       });
     } catch (err) {
@@ -150,17 +142,15 @@ export default function BlogPostClientPage({ post }) {
     }
   };
 
-  const handleNewComment = (newCommentData) => {
-    setComments((prev) => [...prev, { ...newCommentData, isPending: true }]);
+  const handleNewComment = (newComment) => {
+    setComments((prev) => [...prev, { ...newComment, isPending: true }]);
   };
 
-  const handleNewReply = (newReplyData, parentId) => {
-    const optimisticReply = {
-      ...newReplyData,
-      isPending: true,
-      parentComment: { _ref: parentId },
-    };
-    setComments((prev) => [...prev, optimisticReply]);
+  const handleNewReply = (newReply, parentId) => {
+    setComments((prev) => [
+      ...prev,
+      { ...newReply, isPending: true, parentComment: { _ref: parentId } },
+    ]);
     setReplyTo(null);
   };
 
@@ -194,7 +184,7 @@ export default function BlogPostClientPage({ post }) {
               ? 'bg-gray-200 text-gray-600 cursor-not-allowed'
               : 'bg-white border-gray-300 hover:bg-blue-600 hover:text-white'
           }`}>
-          ❤️ {likes} Like{likes !== 1 && 's'}{' '}
+          ❤️ {likes} Like{likes !== 1 ? 's' : ''}{' '}
           {alreadyLiked && '(You liked this!)'}
         </button>
       </div>
@@ -239,15 +229,25 @@ export default function BlogPostClientPage({ post }) {
                   : 'Reply'}
               </button>
 
+              {replyTo === (comment._id || comment._createdAt) && (
+                <div className="mt-3">
+                  <CommentForm
+                    postId={post._id}
+                    parentCommentId={comment._id}
+                    onCommentSubmitted={(reply) =>
+                      handleNewReply(reply, comment._id)
+                    }
+                  />
+                </div>
+              )}
+
               <div className="ml-5 mt-4 pl-4 border-l-2 border-gray-100 space-y-3">
                 {comments
                   .filter((r) => r.parentComment?._ref === comment._id)
                   .map((reply) => (
                     <div
                       key={reply._id || reply._createdAt}
-                      className={`rounded-md p-3 bg-gray-50 ${
-                        reply.isPending ? 'opacity-70' : ''
-                      }`}>
+                      className={`rounded-md p-3 bg-gray-50 ${reply.isPending ? 'opacity-70' : ''}`}>
                       <p className="font-semibold">
                         {reply.name}{' '}
                         {reply.isPending && (
@@ -259,18 +259,6 @@ export default function BlogPostClientPage({ post }) {
                       <p className="mt-1 text-gray-700">{reply.comment}</p>
                     </div>
                   ))}
-
-                {replyTo === (comment._id || comment._createdAt) && (
-                  <div className="mt-3">
-                    <CommentForm
-                      postId={post._id}
-                      parentCommentId={comment._id}
-                      onCommentSubmitted={(newReply) =>
-                        handleNewReply(newReply, comment._id)
-                      }
-                    />
-                  </div>
-                )}
               </div>
             </div>
           ))}

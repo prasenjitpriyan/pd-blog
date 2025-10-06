@@ -47,7 +47,12 @@ export default defineType({
           name: 'caption',
           type: 'string',
           title: 'Caption',
-          options: { isHighlighted: true },
+          options: { isHighlighted: false },
+        },
+        {
+          name: 'alt',
+          type: 'string',
+          title: 'Alternative text',
         },
       ],
     }),
