@@ -1,3 +1,4 @@
+import { House } from 'lucide-react';
 import { Inter } from 'next/font/google';
 import Link from 'next/link';
 import './globals.css';
@@ -22,11 +23,11 @@ function Header() {
           PD-Blog
         </Link>
 
-        <nav aria-label="Main Navigation" className="space-x-6 text-gray-700">
-          <Link
-            href="/"
-            className="hover:text-blue-600 font-medium transition-colors">
-            Home
+        <nav
+          aria-label="Main Navigation"
+          className="space-x-6 text-white bg-blue-600 p-2 rounded-full flex">
+          <Link href="/" className="font-medium">
+            <House />
           </Link>
         </nav>
       </div>
